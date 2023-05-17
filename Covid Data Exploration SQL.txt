@@ -1,0 +1,84 @@
+SELECT * FROM CovidDeaths
+WHERE Continent IS NOT NULL
+ORDER BY 3,4 ;
+
+--SELECT * FROM CovidVaccinations
+--ORDER BY 3,4 ;
+
+SELECT Location, date, total_cases, new_cases, total_deaths, population
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+ORDER BY 1,2;
+
+--lOOKING AT TOTAL CASES VS TOTAL DEATHS--
+--Shows the likelihood of dying if you contract Covid in your country--
+
+SELECT Location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 AS Death_Percentage
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+ORDER BY 1,2;
+
+--lOOKING AT TOTAL CASES VS POPULATION--
+--Shows what percentage of population got Covid--
+
+SELECT Location, date, total_deaths, population, (total_cases/population)*100 AS Percentage_Population_Infected
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+ORDER BY 1,2;
+
+--LOOKING AT COUNTRIES WITH HIGHEST INFECTION RATES COMPARED TO POPULATION--
+
+SELECT Location, population, MAX(total_cases) AS Highest_Infection_Count, MAX((total_cases/population))*100 AS Percentage_Population_Infected
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+GROUP BY Population, Location
+ORDER BY Percentage_Population_Infected DESC;
+
+--LOOKING AT COUNTRIES WITH HIGHEST DEATH COUNTS PER POPULATION--
+
+SELECT Location, MAX(cast(Total_deaths AS int)) AS Total_Death_Count
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+GROUP BY Population
+ORDER BY Total_Death_Count DESC;
+
+--BREAKING THINGS DOWN BY CONTINENT--
+
+SELECT Continent, MAX(cast(Total_deaths AS int)) AS Total_Death_Count
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+GROUP BY Continent
+ORDER BY Total_Death_Count DESC;
+
+--GLOBAL NUMBERS--
+
+SELECT date, SUM(new_cases) AS Total_Cases, SUM(CAST(new_deaths AS INT)) AS Total_Deaths,  SUM(CAST(new_deaths AS INT))/SUM(new_cases)*100 AS DeathPercentage
+FROM CovidDeaths
+WHERE Continent IS NOT NULL
+GROUP BY Date
+ORDER BY 1,2;
+
+--JOINING WITH THE OTHER TABLE--
+--LOOKING AT TOTAL POPULATION VS TOTAL VACCINATIONS--
+
+SELECT CovidDeaths.Continent, CovidDeaths.location, CovidDeaths.date, CovidDeaths.population, CovidVaccinations.new_vaccinations,
+SUM(Cast(CovidVaccinations.new_vaccinations as INT)) OVER (PARTITION BY CovidDeaths.location ORDER BY  CovidDeaths.location AND CovidDeaths.date) AS Rolling_People_Vaccinated
+FROM CovidDeaths
+JOIN CovidVaccinations
+ON CovidDeaths.location = CovidVaccinations.location
+AND CovidDeaths.date = CovidVaccinations.date
+WHERE CovidDeaths.continent IS NOT NULL
+ORDER BY 1,2,3
+;
+
+--LOOKING AT TOTAL POPULATION VS TOTAL VACCINATIONS--
+
+SELECT CovidDeaths.Continent, CovidDeaths.location, CovidDeaths.date, CovidDeaths.population, CovidVaccinations.new_vaccinations,
+SUM(Cast(CovidVaccinations.new_vaccinations as INT)) OVER (PARTITION BY CovidDeaths.location ORDER BY  CovidDeaths.location AND CovidDeaths.date) AS Rolling_People_Vaccinated
+FROM CovidDeaths
+JOIN CovidVaccinations
+ON CovidDeaths.location = CovidVaccinations.location
+AND CovidDeaths.date = CovidVaccinations.date
+WHERE CovidDeaths.continent IS NOT NULL
+ORDER BY 1,2,3
+;
